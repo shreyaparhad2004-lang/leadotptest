@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="english">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0"
+    />
+    <title>Consent Widget</title>
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css" />
+
+  </head>
+  <body>
+    <div class="widget-container">
+      <div class="header-language-wrapper-container">
+        <div id="language-wrapper" class="d-none">
+          <div class="dropdown">
+            <label for="langSelect">
+              Language Preference <br />
+            </label>
+            <select id="langSelect"></select>
+          </div>
+        </div>
+      </div>
+      <div id="pc-tabs" class="pc-tabs d-none">
+        <div class="pc-tab-group">
+          <div id="tab-current" class="pc-tab active">
+            Current Preference
+          </div>
+          <div id="tab-history" class="pc-tab">
+            Preference History
+          </div>
+        </div>
+      <div id="downloadHistoryBtn" class="download-history-link hidden">
+      <i class="ri-download-2-line"></i> Download Current Preference
+      </div>
+      </div>
+
+      <div class="header-container">
+
+        <div id="logo-area" class="logo-area">
+        </div>
+      </div>
+
+      <div class="preview-statements">
+        <div id="consent-root">Loading...</div>
+
+        <div id="historyTab" class="hidden">
+          <div
+            id="historyContainer"
+            class="history-scroll"
+          ></div>
+        </div>
+
+        <div id="toast"></div>
+      </div>
+
+      <div class="full-width-footer-border" id="full-width-footer-border"></div>
+
+      <div
+        id="error-message"
+        class="error-message form-error"
+      ></div>
+
+      <div class="button-group" id="button-group">
+        <button class="cancel d-none" id="cancelBtn">
+          Cancel
+        </button>
+        <button class="submit d-none" id="submitBtn">
+          Submit
+        </button>
+      </div>
+    </div>
+
+<script>
+  window.consentWidgetConfig = {
+    preferenceFormId: "ceb90426-701b-41c6-a558-27d04e017c6f",
+    preferenceFormName: "Darwinbox",
+    apiDomain: "https://perf.pre-dataprivacy.com",
+    preferenceDetailsApiUrl:"https://perf.pre-dataprivacy.com/cpm-api/open-api/v1/preference/v1/export/getPreferenceDetails",
+    preferenceHistoryApiUrl:"https://perf.pre-dataprivacy.com/cpm-api/open-api/v1/preference/v1/export/auditSearch/scroll",
+    downloadHistoryPdfApiUrl:"https://perf.pre-dataprivacy.com/cpm-api/open-api/v1/preference/v1/export/downloadPreferenceHistoryPdf",
+    submitApiUrl:"https://perf.pre-dataprivacy.com/cpm-api/open-api/v1/preference/v1/createOrUpdateConsent",
+    signatureServiceUrl: "https://perf.pre-dataprivacy.com/cpm-sign",
+    userToken: "Bearer bearer",
+    customAttributes: {
+      "Test": "",
+      "vapt": ""
+    },
+    showButtons: true,
+    showLanguageDropdown: true,
+    enableCheckboxes: true,
+    enableRadioButtons: true,
+    enableDropdowns: true,
+    footerAlignment: "left",
+    receivedType:"WEB",
+    customHeaders: {
+        "test-header-1": "test-1",
+        "test-header-2": "test-2"
+    },
+    // OTP verification, used when a consent form in this preference center has OTP enabled.
+    // Set the end user's mobile (required, 10 digits) and email (optional) before the user taps Generate OTP.
+    // Do not pass them in the page URL.
+    // The user taps Generate OTP, enters the OTP and taps Verify and Submit: one tap verifies the OTP and saves
+    // the preference. With OTP there is no separate Submit / Cancel button.
+    mobile: "",
+    email: "",
+    // Same OTP APIs as a consent form; the form JWT tells the backend it is a preference center
+    sendOtpApiUrl: "https://perf.pre-dataprivacy.com/cpm-api/open-api/v1/consent/v1/sendOtp",
+    verifyOtpApiUrl: "https://perf.pre-dataprivacy.com/cpm-api/open-api/v1/consent/v1/verifyOtp",
+    // Called once after the preference is saved; response.consentCapturedAt has the date and timestamp.
+    onConsentSubmitted: function (response) {
+      // e.g. store response.consentCapturedAt or enable a button on this page
+    },
+    // With showButtons: false, called when the form can (true) or cannot (false) be submitted:
+    // set the disabled state of this page's Submit button to !isReady.
+    // With OTP it is ready once the OTP is entered; consentWidget.submit() then verifies it and saves.
+    onSubmitReady: function (isReady) {
+      // e.g. document.getElementById("parentSubmitBtn").disabled = !isReady;
+    }
+  };
+
+  // Function for Android WebView integration to dynamically set user token,
+  // and the end user's mobile and email for OTP verification.
+  // Called from Android native code before loading the consent widget
+  window.updateConsentConfig = function(token, mobile, email) {
+  if (token) {
+    window.consentWidgetConfig.userToken = token;
+  }
+
+  if (mobile !== undefined) {
+    window.consentWidgetConfig.mobile = mobile;
+  }
+
+  if (email !== undefined) {
+    window.consentWidgetConfig.email = email;
+  }
+
+  // Dynamically load script.js only once to prevent multiple script injections
+    if (!window.scriptLoaded) {
+        const script = document.createElement('script');
+        script.src = 'script.js';
+        // SRI (Subresource Integrity) ensures script hasn't been tampered with
+        // crossOrigin required for SRI validation
+        script.crossOrigin = 'anonymous';
+        script.integrity = "sha384-UqssWnuw2oTsxltvnnZkAowvyiF05YAvAirlU6mn7cpxQAKZ19ae1ZLjTiCEa4CX";
+        script.onload = function() {
+          window.scriptLoaded = true;
+        };
+        document.body.appendChild(script);
+      }
+
+
+  return "Config updated successfully";
+};
+  
+</script>
+  
+<!--
+  Optional: Use custom buttons if the parent application
+  wants to control Consent Form submission and reset actions.
+
+  Note:
+  - Set `showButtons: false` in the widget configuration.
+  - Submit button calls `consentWidget.submit()`.
+  - Clear button calls `consentWidget.reset()`.
+  - Keep the parent Submit button disabled on load and enable it from `onSubmitReady`.
+  - With OTP, the user generates and enters the OTP in the widget; the form becomes ready once the OTP is
+    entered, and `consentWidget.submit()` verifies the OTP and saves the preference in one step.
+    If the OTP was verified but the save failed, calling `consentWidget.submit()` again retries only the save.
+  - `consentWidget.submit()` always resolves to an object; check `result.success`.
+-->
+
+<!--Example-->
+
+<!--
+<button id="parentClearBtn" style="padding:10px 16px; background:#dc2626; color:white; border:none; border-radius:6px;">
+  Clear Consent
+</button>
+<button id="parentSubmitBtn" style="padding:10px 16px; background:#16a34a; color:white; border:none; border-radius:6px;">
+  Submit Consent
+</button>
+
+<script>
+  document.getElementById("parentSubmitBtn").addEventListener("click", async () => {
+    if (!window.consentWidget) return;
+
+    const result = await window.consentWidget.submit();
+
+    if (result.success) {
+      // navigate next page here
+      // window.location.href = "/next-page";
+    }
+  });
+
+  document.getElementById("parentClearBtn").addEventListener("click", () => {
+    if (!window.consentWidget) return;
+
+    window.consentWidget.reset();
+  });
+-->
+
+</script>
+<!--comment below line in case of Android integration -->
+<script src="script.js" integrity="sha384-UqssWnuw2oTsxltvnnZkAowvyiF05YAvAirlU6mn7cpxQAKZ19ae1ZLjTiCEa4CX" crossorigin="anonymous"></script>
+  </body>
+</html>
+   
